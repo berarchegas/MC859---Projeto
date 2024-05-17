@@ -17,7 +17,7 @@ Cube::Cube(const vector<int>& _v) : v(_v) {}
 
 Cube::Cube(const Cube& other) : v(other.v) {}
 
-void set(int face, int i, int j, int cor) {
+void Cube::set(int face, int i, int j, int cor) {
     int bit = 9 * i + 3 * j;
     int val = this->v[face];
     for (int add = 0; add < 3; add++)
@@ -26,12 +26,12 @@ void set(int face, int i, int j, int cor) {
     this->v[face] = val;
 }
 
-int getColor(int face, int i, int j) {
+int Cube::getColor(int face, int i, int j) const {
     int bit = 9 * i + 3 * j;
     return (this->v[face] >> bit) & 7;
 }
 
-vector<int> Cube::copyCube() const {
+Cube Cube::copyCube() const {
     Cube newCube = Cube();
     for (int i = 0; i < 6; ++i) {
         for (int j = 0; j < 3; ++j) {
@@ -40,7 +40,7 @@ vector<int> Cube::copyCube() const {
             }
         }
     }
-    return newCube.v;
+    return newCube;
 }
 
 void Cube::print() const {
@@ -71,392 +71,391 @@ A orientação da face amarela aponta pra face verde
 A orientação das outras têm a branca como base, ou seja, apontam para a amarela
 */
 
+// temp.set(4, 0, 1, this->getColor(4, 1, 2));
 
 void Cube::rightAntiClock() {
-    vector<int> temp = this->copyCube();
+    Cube temp = this->copyCube();
 
-    temp.set(4, 0, 1, this->getColor(4, 1, 2));
+    temp[4][0][1] = cube[4][1][2];
+    temp[4][1][0] = cube[4][0][1];
+    temp[4][2][1] = cube[4][1][0];
+    temp[4][1][2] = cube[4][2][1];
 
-    // temp[4][0][1] = cube[4][1][2];
-    // temp[4][1][0] = cube[4][0][1];
-    // temp[4][2][1] = cube[4][1][0];
-    // temp[4][1][2] = cube[4][2][1];
+    temp[4][0][0] = cube[4][0][2];
+    temp[4][2][0] = cube[4][0][0];
+    temp[4][2][2] = cube[4][2][0];
+    temp[4][0][2] = cube[4][2][2];
 
-    // temp[4][0][0] = cube[4][0][2];
-    // temp[4][2][0] = cube[4][0][0];
-    // temp[4][2][2] = cube[4][2][0];
-    // temp[4][0][2] = cube[4][2][2];
+    temp[0][0][2] = cube[3][0][2];
+    temp[0][1][2] = cube[3][1][2];
+    temp[0][2][2] = cube[3][2][2];
 
-    // temp[0][0][2] = cube[3][0][2];
-    // temp[0][1][2] = cube[3][1][2];
-    // temp[0][2][2] = cube[3][2][2];
+    temp[3][0][2] = cube[5][2][0];
+    temp[3][1][2] = cube[5][1][0];
+    temp[3][2][2] = cube[5][0][0];
 
-    // temp[3][0][2] = cube[5][2][0];
-    // temp[3][1][2] = cube[5][1][0];
-    // temp[3][2][2] = cube[5][0][0];
+    temp[5][0][0] = cube[1][2][2];
+    temp[5][1][0] = cube[1][1][2];
+    temp[5][2][0] = cube[1][0][2];
 
-    // temp[5][0][0] = cube[1][2][2];
-    // temp[5][1][0] = cube[1][1][2];
-    // temp[5][2][0] = cube[1][0][2];
+    temp[1][0][2] = cube[0][0][2];
+    temp[1][1][2] = cube[0][1][2];
+    temp[1][2][2] = cube[0][2][2];
 
-    // temp[1][0][2] = cube[0][0][2];
-    // temp[1][1][2] = cube[0][1][2];
-    // temp[1][2][2] = cube[0][2][2];
+    *this = temp;
+}
+
+void Cube::rightClock() {
+    vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
+
+    temp[4][0][1] = cube[4][1][0];
+    temp[4][1][0] = cube[4][2][1];
+    temp[4][2][1] = cube[4][1][2];
+    temp[4][1][2] = cube[4][0][1];
+
+    temp[4][0][0] = cube[4][2][0];
+    temp[4][2][0] = cube[4][2][2];
+    temp[4][2][2] = cube[4][0][2];
+    temp[4][0][2] = cube[4][0][0];
+
+    temp[0][0][2] = cube[1][0][2];
+    temp[0][1][2] = cube[1][1][2];
+    temp[0][2][2] = cube[1][2][2];
+
+    temp[3][0][2] = cube[0][0][2];
+    temp[3][1][2] = cube[0][1][2];
+    temp[3][2][2] = cube[0][2][2];
+
+    temp[5][2][0] = cube[3][0][2];
+    temp[5][1][0] = cube[3][1][2];
+    temp[5][0][0] = cube[3][2][2];
+
+    temp[1][0][2] = cube[5][2][0];
+    temp[1][1][2] = cube[5][1][0];
+    temp[1][2][2] = cube[5][0][0];
 
     this->v = temp;
 }
 
-// void Cube::rightClock() {
-//     vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
-
-//     temp[4][0][1] = cube[4][1][0];
-//     temp[4][1][0] = cube[4][2][1];
-//     temp[4][2][1] = cube[4][1][2];
-//     temp[4][1][2] = cube[4][0][1];
-
-//     temp[4][0][0] = cube[4][2][0];
-//     temp[4][2][0] = cube[4][2][2];
-//     temp[4][2][2] = cube[4][0][2];
-//     temp[4][0][2] = cube[4][0][0];
-
-//     temp[0][0][2] = cube[1][0][2];
-//     temp[0][1][2] = cube[1][1][2];
-//     temp[0][2][2] = cube[1][2][2];
-
-//     temp[3][0][2] = cube[0][0][2];
-//     temp[3][1][2] = cube[0][1][2];
-//     temp[3][2][2] = cube[0][2][2];
-
-//     temp[5][2][0] = cube[3][0][2];
-//     temp[5][1][0] = cube[3][1][2];
-//     temp[5][0][0] = cube[3][2][2];
-
-//     temp[1][0][2] = cube[5][2][0];
-//     temp[1][1][2] = cube[5][1][0];
-//     temp[1][2][2] = cube[5][0][0];
+void Cube::upClock() {
+    vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
+
+    temp[0][0][1] = cube[0][1][0];
+    temp[0][1][0] = cube[0][2][1];
+    temp[0][2][1] = cube[0][1][2];
+    temp[0][1][2] = cube[0][0][1];
+
+    temp[0][0][0] = cube[0][2][0];
+    temp[0][2][0] = cube[0][2][2];
+    temp[0][2][2] = cube[0][0][2];
+    temp[0][0][2] = cube[0][0][0];
+
+    temp[2][0][2] = cube[1][0][0];
+    temp[2][1][2] = cube[1][0][1];
+    temp[2][2][2] = cube[1][0][2];
+
+    temp[3][2][0] = cube[2][2][2];
+    temp[3][2][1] = cube[2][1][2];
+    temp[3][2][2] = cube[2][0][2];
+
+    temp[4][0][0] = cube[3][2][0];
+    temp[4][1][0] = cube[3][2][1];
+    temp[4][2][0] = cube[3][2][2];
+
+    temp[1][0][0] = cube[4][2][0];
+    temp[1][0][1] = cube[4][1][0];
+    temp[1][0][2] = cube[4][0][0];
 
-//     this->v = temp;
-// }
+    this->v = temp;
+}
 
-// void Cube::upClock() {
-//     vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
-
-//     temp[0][0][1] = cube[0][1][0];
-//     temp[0][1][0] = cube[0][2][1];
-//     temp[0][2][1] = cube[0][1][2];
-//     temp[0][1][2] = cube[0][0][1];
-
-//     temp[0][0][0] = cube[0][2][0];
-//     temp[0][2][0] = cube[0][2][2];
-//     temp[0][2][2] = cube[0][0][2];
-//     temp[0][0][2] = cube[0][0][0];
-
-//     temp[2][0][2] = cube[1][0][0];
-//     temp[2][1][2] = cube[1][0][1];
-//     temp[2][2][2] = cube[1][0][2];
-
-//     temp[3][2][0] = cube[2][2][2];
-//     temp[3][2][1] = cube[2][1][2];
-//     temp[3][2][2] = cube[2][0][2];
-
-//     temp[4][0][0] = cube[3][2][0];
-//     temp[4][1][0] = cube[3][2][1];
-//     temp[4][2][0] = cube[3][2][2];
-
-//     temp[1][0][0] = cube[4][2][0];
-//     temp[1][0][1] = cube[4][1][0];
-//     temp[1][0][2] = cube[4][0][0];
+void Cube::upAntiClock() {
+    vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
+
+    temp[0][0][1] = cube[0][1][2];
+    temp[0][1][0] = cube[0][0][1];
+    temp[0][2][1] = cube[0][1][0];
+    temp[0][1][2] = cube[0][2][1];
+
+    temp[0][0][0] = cube[0][0][2];
+    temp[0][2][0] = cube[0][0][0];
+    temp[0][2][2] = cube[0][2][0];
+    temp[0][0][2] = cube[0][2][2];
+
+    temp[2][0][2] = cube[3][2][2];
+    temp[2][1][2] = cube[3][2][1];
+    temp[2][2][2] = cube[3][2][0];
+
+    temp[3][2][2] = cube[4][2][0];
+    temp[3][2][1] = cube[4][1][0];
+    temp[3][2][0] = cube[4][0][0];
+
+    temp[4][0][0] = cube[1][0][2];
+    temp[4][1][0] = cube[1][0][1];
+    temp[4][2][0] = cube[1][0][0];
+
+    temp[1][0][0] = cube[2][0][2];
+    temp[1][0][1] = cube[2][1][2];
+    temp[1][0][2] = cube[2][2][2];
 
-//     this->v = temp;
-// }
+    this->v = temp;
+}
 
-// void Cube::upAntiClock() {
-//     vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
-
-//     temp[0][0][1] = cube[0][1][2];
-//     temp[0][1][0] = cube[0][0][1];
-//     temp[0][2][1] = cube[0][1][0];
-//     temp[0][1][2] = cube[0][2][1];
-
-//     temp[0][0][0] = cube[0][0][2];
-//     temp[0][2][0] = cube[0][0][0];
-//     temp[0][2][2] = cube[0][2][0];
-//     temp[0][0][2] = cube[0][2][2];
-
-//     temp[2][0][2] = cube[3][2][2];
-//     temp[2][1][2] = cube[3][2][1];
-//     temp[2][2][2] = cube[3][2][0];
-
-//     temp[3][2][2] = cube[4][2][0];
-//     temp[3][2][1] = cube[4][1][0];
-//     temp[3][2][0] = cube[4][0][0];
-
-//     temp[4][0][0] = cube[1][0][2];
-//     temp[4][1][0] = cube[1][0][1];
-//     temp[4][2][0] = cube[1][0][0];
-
-//     temp[1][0][0] = cube[2][0][2];
-//     temp[1][0][1] = cube[2][1][2];
-//     temp[1][0][2] = cube[2][2][2];
+void Cube::leftClock() {
+    vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
+
+    temp[2][0][1] = cube[2][1][0];
+    temp[2][1][0] = cube[2][2][1];
+    temp[2][2][1] = cube[2][1][2];
+    temp[2][1][2] = cube[2][0][1];
+
+    temp[2][0][0] = cube[2][2][0];
+    temp[2][2][0] = cube[2][2][2];
+    temp[2][2][2] = cube[2][0][2];
+    temp[2][0][2] = cube[2][0][0];
+
+    temp[0][0][0] = cube[3][0][0];
+    temp[0][1][0] = cube[3][1][0];
+    temp[0][2][0] = cube[3][2][0];
+
+    temp[3][0][0] = cube[5][2][2];
+    temp[3][1][0] = cube[5][1][2];
+    temp[3][2][0] = cube[5][0][2];
+
+    temp[5][0][2] = cube[1][2][0];
+    temp[5][1][2] = cube[1][1][0];
+    temp[5][2][2] = cube[1][0][0];
+
+    temp[1][0][0] = cube[0][0][0];
+    temp[1][1][0] = cube[0][1][0];
+    temp[1][2][0] = cube[0][2][0];
 
-//     this->v = temp;
-// }
+    this->v = temp;
+}
 
-// void Cube::leftClock() {
-//     vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
-
-//     temp[2][0][1] = cube[2][1][0];
-//     temp[2][1][0] = cube[2][2][1];
-//     temp[2][2][1] = cube[2][1][2];
-//     temp[2][1][2] = cube[2][0][1];
-
-//     temp[2][0][0] = cube[2][2][0];
-//     temp[2][2][0] = cube[2][2][2];
-//     temp[2][2][2] = cube[2][0][2];
-//     temp[2][0][2] = cube[2][0][0];
-
-//     temp[0][0][0] = cube[3][0][0];
-//     temp[0][1][0] = cube[3][1][0];
-//     temp[0][2][0] = cube[3][2][0];
-
-//     temp[3][0][0] = cube[5][2][2];
-//     temp[3][1][0] = cube[5][1][2];
-//     temp[3][2][0] = cube[5][0][2];
-
-//     temp[5][0][2] = cube[1][2][0];
-//     temp[5][1][2] = cube[1][1][0];
-//     temp[5][2][2] = cube[1][0][0];
-
-//     temp[1][0][0] = cube[0][0][0];
-//     temp[1][1][0] = cube[0][1][0];
-//     temp[1][2][0] = cube[0][2][0];
+void Cube::leftAntiClock() {
+    vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
+
+    temp[2][0][1] = cube[2][1][2];
+    temp[2][1][0] = cube[2][0][1];
+    temp[2][2][1] = cube[2][1][0];
+    temp[2][1][2] = cube[2][2][1];
+
+    temp[2][0][0] = cube[2][0][2];
+    temp[2][2][0] = cube[2][0][0];
+    temp[2][2][2] = cube[2][2][0];
+    temp[2][0][2] = cube[2][2][2];
+
+    temp[0][0][0] = cube[1][0][0];
+    temp[0][1][0] = cube[1][1][0];
+    temp[0][2][0] = cube[1][2][0];
+
+    temp[3][0][0] = cube[0][0][0];
+    temp[3][1][0] = cube[0][1][0];
+    temp[3][2][0] = cube[0][2][0];
+
+    temp[5][0][2] = cube[3][2][0];
+    temp[5][1][2] = cube[3][1][0];
+    temp[5][2][2] = cube[3][0][0];
+
+    temp[1][0][0] = cube[5][2][2];
+    temp[1][1][0] = cube[5][1][2];
+    temp[1][2][0] = cube[5][0][2];
 
-//     this->v = temp;
-// }
+    this->v = temp;
+}
 
-// void Cube::leftAntiClock() {
-//     vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
-
-//     temp[2][0][1] = cube[2][1][2];
-//     temp[2][1][0] = cube[2][0][1];
-//     temp[2][2][1] = cube[2][1][0];
-//     temp[2][1][2] = cube[2][2][1];
-
-//     temp[2][0][0] = cube[2][0][2];
-//     temp[2][2][0] = cube[2][0][0];
-//     temp[2][2][2] = cube[2][2][0];
-//     temp[2][0][2] = cube[2][2][2];
-
-//     temp[0][0][0] = cube[1][0][0];
-//     temp[0][1][0] = cube[1][1][0];
-//     temp[0][2][0] = cube[1][2][0];
-
-//     temp[3][0][0] = cube[0][0][0];
-//     temp[3][1][0] = cube[0][1][0];
-//     temp[3][2][0] = cube[0][2][0];
-
-//     temp[5][0][2] = cube[3][2][0];
-//     temp[5][1][2] = cube[3][1][0];
-//     temp[5][2][2] = cube[3][0][0];
-
-//     temp[1][0][0] = cube[5][2][2];
-//     temp[1][1][0] = cube[5][1][2];
-//     temp[1][2][0] = cube[5][0][2];
+void Cube::downClock() {
+    vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
+
+    temp[5][0][1] = cube[5][1][0];
+    temp[5][1][0] = cube[5][2][1];
+    temp[5][2][1] = cube[5][1][2];
+    temp[5][1][2] = cube[5][0][1];
+
+    temp[5][0][0] = cube[5][2][0];
+    temp[5][2][0] = cube[5][2][2];
+    temp[5][2][2] = cube[5][0][2];
+    temp[5][0][2] = cube[5][0][0];
+
+    temp[2][0][0] = cube[3][0][2];
+    temp[2][1][0] = cube[3][0][1];
+    temp[2][2][0] = cube[3][0][0];
+
+    temp[3][0][0] = cube[4][0][2];
+    temp[3][0][1] = cube[4][1][2];
+    temp[3][0][2] = cube[4][2][2];
+
+    temp[4][0][2] = cube[1][2][2];
+    temp[4][1][2] = cube[1][2][1];
+    temp[4][2][2] = cube[1][2][0];
+
+    temp[1][2][2] = cube[2][2][0];
+    temp[1][2][1] = cube[2][1][0];
+    temp[1][2][0] = cube[2][0][0];
 
-//     this->v = temp;
-// }
+    this->v = temp;
+}
 
-// void Cube::downClock() {
-//     vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
-
-//     temp[5][0][1] = cube[5][1][0];
-//     temp[5][1][0] = cube[5][2][1];
-//     temp[5][2][1] = cube[5][1][2];
-//     temp[5][1][2] = cube[5][0][1];
-
-//     temp[5][0][0] = cube[5][2][0];
-//     temp[5][2][0] = cube[5][2][2];
-//     temp[5][2][2] = cube[5][0][2];
-//     temp[5][0][2] = cube[5][0][0];
-
-//     temp[2][0][0] = cube[3][0][2];
-//     temp[2][1][0] = cube[3][0][1];
-//     temp[2][2][0] = cube[3][0][0];
-
-//     temp[3][0][0] = cube[4][0][2];
-//     temp[3][0][1] = cube[4][1][2];
-//     temp[3][0][2] = cube[4][2][2];
-
-//     temp[4][0][2] = cube[1][2][2];
-//     temp[4][1][2] = cube[1][2][1];
-//     temp[4][2][2] = cube[1][2][0];
-
-//     temp[1][2][2] = cube[2][2][0];
-//     temp[1][2][1] = cube[2][1][0];
-//     temp[1][2][0] = cube[2][0][0];
+void Cube::downAntiClock() {
+    vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
+
+    temp[5][0][1] = cube[5][1][2];
+    temp[5][1][0] = cube[5][0][1];
+    temp[5][2][1] = cube[5][1][0];
+    temp[5][1][2] = cube[5][2][1];
+
+    temp[5][0][0] = cube[5][0][2];
+    temp[5][2][0] = cube[5][0][0];
+    temp[5][2][2] = cube[5][2][0];
+    temp[5][0][2] = cube[5][2][2];
+
+    temp[2][0][0] = cube[1][2][0];
+    temp[2][1][0] = cube[1][2][1];
+    temp[2][2][0] = cube[1][2][2];
+
+    temp[3][0][0] = cube[2][2][0];
+    temp[3][0][1] = cube[2][1][0];
+    temp[3][0][2] = cube[2][0][0];
+
+    temp[4][0][2] = cube[3][0][0];
+    temp[4][1][2] = cube[3][0][1];
+    temp[4][2][2] = cube[3][0][2];
+
+    temp[1][2][0] = cube[4][2][2];
+    temp[1][2][1] = cube[4][1][2];
+    temp[1][2][2] = cube[4][0][2];
 
-//     this->v = temp;
-// }
+    this->v = temp;
+}
 
-// void Cube::downAntiClock() {
-//     vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
-
-//     temp[5][0][1] = cube[5][1][2];
-//     temp[5][1][0] = cube[5][0][1];
-//     temp[5][2][1] = cube[5][1][0];
-//     temp[5][1][2] = cube[5][2][1];
-
-//     temp[5][0][0] = cube[5][0][2];
-//     temp[5][2][0] = cube[5][0][0];
-//     temp[5][2][2] = cube[5][2][0];
-//     temp[5][0][2] = cube[5][2][2];
-
-//     temp[2][0][0] = cube[1][2][0];
-//     temp[2][1][0] = cube[1][2][1];
-//     temp[2][2][0] = cube[1][2][2];
-
-//     temp[3][0][0] = cube[2][2][0];
-//     temp[3][0][1] = cube[2][1][0];
-//     temp[3][0][2] = cube[2][0][0];
-
-//     temp[4][0][2] = cube[3][0][0];
-//     temp[4][1][2] = cube[3][0][1];
-//     temp[4][2][2] = cube[3][0][2];
-
-//     temp[1][2][0] = cube[4][2][2];
-//     temp[1][2][1] = cube[4][1][2];
-//     temp[1][2][2] = cube[4][0][2];
-
-//     this->v = temp;
-// }
-
-// void Cube::frontClock() {
-//     vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
-
-//     temp[1][0][1] = cube[1][1][0];
-//     temp[1][1][0] = cube[1][2][1];
-//     temp[1][2][1] = cube[1][1][2];
-//     temp[1][1][2] = cube[1][0][1];
-
-//     temp[1][0][0] = cube[1][2][0];
-//     temp[1][2][0] = cube[1][2][2];
-//     temp[1][2][2] = cube[1][0][2];
-//     temp[1][0][2] = cube[1][0][0];
-
-//     temp[0][2][0] = cube[2][2][0];
-//     temp[0][2][1] = cube[2][2][1];
-//     temp[0][2][2] = cube[2][2][2];
-
-//     temp[4][2][0] = cube[0][2][0];
-//     temp[4][2][1] = cube[0][2][1];
-//     temp[4][2][2] = cube[0][2][2];
-
-//     temp[5][2][0] = cube[4][2][0];
-//     temp[5][2][1] = cube[4][2][1];
-//     temp[5][2][2] = cube[4][2][2];
-
-//     temp[2][2][0] = cube[5][2][0];
-//     temp[2][2][1] = cube[5][2][1];
-//     temp[2][2][2] = cube[5][2][2];
-
-//     this->v = temp;
-// }
-
-// void Cube::frontAntiClock() {
-//     vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
-
-//     temp[1][0][1] = cube[1][1][2];
-//     temp[1][1][0] = cube[1][0][1];
-//     temp[1][2][1] = cube[1][1][0];
-//     temp[1][1][2] = cube[1][2][1];
-
-//     temp[1][0][0] = cube[1][0][2];
-//     temp[1][2][0] = cube[1][0][0];
-//     temp[1][2][2] = cube[1][2][0];
-//     temp[1][0][2] = cube[1][2][2];
-
-//     temp[5][2][0] = cube[2][2][0];
-//     temp[5][2][1] = cube[2][2][1];
-//     temp[5][2][2] = cube[2][2][2];
-
-//     temp[2][2][0] = cube[0][2][0];
-//     temp[2][2][1] = cube[0][2][1];
-//     temp[2][2][2] = cube[0][2][2];
-
-//     temp[0][2][0] = cube[4][2][0];
-//     temp[0][2][1] = cube[4][2][1];
-//     temp[0][2][2] = cube[4][2][2];
-
-//     temp[4][2][0] = cube[5][2][0];
-//     temp[4][2][1] = cube[5][2][1];
-//     temp[4][2][2] = cube[5][2][2];
-
-//     this->v = temp;
-// }
-
-// void Cube::backClock() {
-//     vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
-
-//     temp[3][0][1] = cube[3][1][0];
-//     temp[3][1][0] = cube[3][2][1];
-//     temp[3][2][1] = cube[3][1][2];
-//     temp[3][1][2] = cube[3][0][1];
-
-//     temp[3][0][0] = cube[3][2][0];
-//     temp[3][2][0] = cube[3][2][2];
-//     temp[3][2][2] = cube[3][0][2];
-//     temp[3][0][2] = cube[3][0][0];
-
-//     temp[5][0][0] = cube[2][0][0];
-//     temp[5][0][1] = cube[2][0][1];
-//     temp[5][0][2] = cube[2][0][2];
-
-//     temp[2][0][0] = cube[0][0][0];
-//     temp[2][0][1] = cube[0][0][1];
-//     temp[2][0][2] = cube[0][0][2];
-
-//     temp[0][0][0] = cube[4][0][0];
-//     temp[0][0][1] = cube[4][0][1];
-//     temp[0][0][2] = cube[4][0][2];
-
-//     temp[4][0][0] = cube[5][0][0];
-//     temp[4][0][1] = cube[5][0][1];
-//     temp[4][0][2] = cube[5][0][2];
-
-//     this->v = temp;
-// }
-
-// void Cube::backAntiClock() {
-//     vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
-
-//     temp[3][0][1] = cube[3][1][2];
-//     temp[3][1][0] = cube[3][0][1];
-//     temp[3][2][1] = cube[3][1][0];
-//     temp[3][1][2] = cube[3][2][1];
-
-//     temp[3][0][0] = cube[3][0][2];
-//     temp[3][2][0] = cube[3][0][0];
-//     temp[3][2][2] = cube[3][2][0];
-//     temp[3][0][2] = cube[3][2][2];
-
-//     temp[0][0][0] = cube[2][0][0];
-//     temp[0][0][1] = cube[2][0][1];
-//     temp[0][0][2] = cube[2][0][2];
-
-//     temp[4][0][0] = cube[0][0][0];
-//     temp[4][0][1] = cube[0][0][1];
-//     temp[4][0][2] = cube[0][0][2];
-
-//     temp[5][0][0] = cube[4][0][0];
-//     temp[5][0][1] = cube[4][0][1];
-//     temp[5][0][2] = cube[4][0][2];
-
-//     temp[2][0][0] = cube[5][0][0];
-//     temp[2][0][1] = cube[5][0][1];
-//     temp[2][0][2] = cube[5][0][2];
-
-//     this->v = temp;
-// }
+void Cube::frontClock() {
+    vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
+
+    temp[1][0][1] = cube[1][1][0];
+    temp[1][1][0] = cube[1][2][1];
+    temp[1][2][1] = cube[1][1][2];
+    temp[1][1][2] = cube[1][0][1];
+
+    temp[1][0][0] = cube[1][2][0];
+    temp[1][2][0] = cube[1][2][2];
+    temp[1][2][2] = cube[1][0][2];
+    temp[1][0][2] = cube[1][0][0];
+
+    temp[0][2][0] = cube[2][2][0];
+    temp[0][2][1] = cube[2][2][1];
+    temp[0][2][2] = cube[2][2][2];
+
+    temp[4][2][0] = cube[0][2][0];
+    temp[4][2][1] = cube[0][2][1];
+    temp[4][2][2] = cube[0][2][2];
+
+    temp[5][2][0] = cube[4][2][0];
+    temp[5][2][1] = cube[4][2][1];
+    temp[5][2][2] = cube[4][2][2];
+
+    temp[2][2][0] = cube[5][2][0];
+    temp[2][2][1] = cube[5][2][1];
+    temp[2][2][2] = cube[5][2][2];
+
+    this->v = temp;
+}
+
+void Cube::frontAntiClock() {
+    vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
+
+    temp[1][0][1] = cube[1][1][2];
+    temp[1][1][0] = cube[1][0][1];
+    temp[1][2][1] = cube[1][1][0];
+    temp[1][1][2] = cube[1][2][1];
+
+    temp[1][0][0] = cube[1][0][2];
+    temp[1][2][0] = cube[1][0][0];
+    temp[1][2][2] = cube[1][2][0];
+    temp[1][0][2] = cube[1][2][2];
+
+    temp[5][2][0] = cube[2][2][0];
+    temp[5][2][1] = cube[2][2][1];
+    temp[5][2][2] = cube[2][2][2];
+
+    temp[2][2][0] = cube[0][2][0];
+    temp[2][2][1] = cube[0][2][1];
+    temp[2][2][2] = cube[0][2][2];
+
+    temp[0][2][0] = cube[4][2][0];
+    temp[0][2][1] = cube[4][2][1];
+    temp[0][2][2] = cube[4][2][2];
+
+    temp[4][2][0] = cube[5][2][0];
+    temp[4][2][1] = cube[5][2][1];
+    temp[4][2][2] = cube[5][2][2];
+
+    this->v = temp;
+}
+
+void Cube::backClock() {
+    vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
+
+    temp[3][0][1] = cube[3][1][0];
+    temp[3][1][0] = cube[3][2][1];
+    temp[3][2][1] = cube[3][1][2];
+    temp[3][1][2] = cube[3][0][1];
+
+    temp[3][0][0] = cube[3][2][0];
+    temp[3][2][0] = cube[3][2][2];
+    temp[3][2][2] = cube[3][0][2];
+    temp[3][0][2] = cube[3][0][0];
+
+    temp[5][0][0] = cube[2][0][0];
+    temp[5][0][1] = cube[2][0][1];
+    temp[5][0][2] = cube[2][0][2];
+
+    temp[2][0][0] = cube[0][0][0];
+    temp[2][0][1] = cube[0][0][1];
+    temp[2][0][2] = cube[0][0][2];
+
+    temp[0][0][0] = cube[4][0][0];
+    temp[0][0][1] = cube[4][0][1];
+    temp[0][0][2] = cube[4][0][2];
+
+    temp[4][0][0] = cube[5][0][0];
+    temp[4][0][1] = cube[5][0][1];
+    temp[4][0][2] = cube[5][0][2];
+
+    this->v = temp;
+}
+
+void Cube::backAntiClock() {
+    vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
+
+    temp[3][0][1] = cube[3][1][2];
+    temp[3][1][0] = cube[3][0][1];
+    temp[3][2][1] = cube[3][1][0];
+    temp[3][1][2] = cube[3][2][1];
+
+    temp[3][0][0] = cube[3][0][2];
+    temp[3][2][0] = cube[3][0][0];
+    temp[3][2][2] = cube[3][2][0];
+    temp[3][0][2] = cube[3][2][2];
+
+    temp[0][0][0] = cube[2][0][0];
+    temp[0][0][1] = cube[2][0][1];
+    temp[0][0][2] = cube[2][0][2];
+
+    temp[4][0][0] = cube[0][0][0];
+    temp[4][0][1] = cube[0][0][1];
+    temp[4][0][2] = cube[0][0][2];
+
+    temp[5][0][0] = cube[4][0][0];
+    temp[5][0][1] = cube[4][0][1];
+    temp[5][0][2] = cube[4][0][2];
+
+    temp[2][0][0] = cube[5][0][0];
+    temp[2][0][1] = cube[5][0][1];
+    temp[2][0][2] = cube[5][0][2];
+
+    this->v = temp;
+}
 
 void Cube::verticalClock() {
     this->leftClock();

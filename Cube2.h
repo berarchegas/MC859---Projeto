@@ -14,7 +14,9 @@ struct Cube {
     Cube();  // Constructor declaration
     Cube(const vector<int>& _v);
     Cube(const Cube& other);
-    vector<int> copyCube() const;
+    void set(int face, int i, int j, int cor);
+    int getColor(int face, int i, int j) const;
+    Cube copyCube() const;
     void print() const; // Method to print the cube
     void rightAntiClock(); // Rotate right face anticlockwise
     void rightClock(); // Rotate right face clockwise
