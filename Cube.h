@@ -9,12 +9,14 @@ struct Cube {
 
     static mt19937 rng;
 
-    vector<vector<vector<int>>> v;
+    vector<int> v;
 
     Cube();  // Constructor declaration
-    Cube(const vector<vector<vector<int>>>& _v);
+    Cube(const vector<int>& _v);
     Cube(const Cube& other);
-    vector<vector<vector<int>>> copyCube(const Cube& source) const;
+    void set(int face, int i, int j, int cor);
+    int getColor(int face, int i, int j) const;
+    Cube copyCube() const;
     void print() const; // Method to print the cube
     void rightAntiClock(); // Rotate right face anticlockwise
     void rightClock(); // Rotate right face clockwise
@@ -38,6 +40,7 @@ struct Cube {
     int countDif() const; // Count the number of tiles that have the wrong color
     int fitness(const vector<int> &x); // Calculates the fitness function
     void scramble(); // Scrambles the cube
+    void findBest(const vector<int> &x); // prints the cube at the lowest fitness point
 };
 
 #endif // CUBE_H

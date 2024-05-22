@@ -8,20 +8,22 @@ mt19937 rng((int) chrono::steady_clock::now().time_since_epoch().count());
 
 // Parameters of the Genetic Algorithm
 // You only need to change stuff here to test
-int numSeconds = 30, populationSize = 100, mutationProbability = 20, crossoverProbability = 80, crossoverPoints = 1;
+int numSeconds = 1000, populationSize = 500, mutationProbability = 20, crossoverProbability = 80, crossoverPoints = 2;
 
 struct Solution 
 {
     vector<int> x;
+    int fitnessValue;
 
     static int N;
     static Cube c;
 
-    Solution() : x(N) {}
+    Solution() : x(N), fitnessValue(-1) {}
 
     bool operator == (Solution other) const { return x == other.x; }
 
     void change(int i) {
+        this->fitnessValue = -1;
         while (true) {
             int move = rng() % 18;
             if (i > 2 && move == this->x[i - 1] && move == this->x[i - 2] && move == this->x[i - 3]) continue;
@@ -32,7 +34,8 @@ struct Solution
     }
 
     int fitness() {
-        return c.fitness(this->x);
+        if (this->fitnessValue >= 0) return this->fitnessValue;
+        return this->fitnessValue = c.fitness(this->x);
     }
 };
 
@@ -76,6 +79,7 @@ void select_best(vector<Solution> &population, vector<Solution> &newPopulation)
 }
 
 void crossover(Solution &child1, Solution &child2) {
+    child1.fitnessValue = child2.fitnessValue = -1;
     vector<bool> crossover(Solution::N);
     vector<int> points(crossoverPoints);
     for (int i = 0; i < crossoverPoints; i++)
@@ -130,8 +134,6 @@ Solution genetic_algorithm()
     int gen = 0;
     while( duration_cast<seconds>(high_resolution_clock::now() - start).count() < numSeconds )
     {
-        gen++;
-        if (gen % 10 == 0) cout << "generation " << gen << endl;
         vector<Solution> newPopulation;
 
         while (newPopulation.size() < 4 * populationSize) {
@@ -147,18 +149,25 @@ Solution genetic_algorithm()
         select_best(intermediate, newPopulation);  
         select_best(population, intermediate);  
 
+        int gens_best = 55;
         for (int i = 0; i < populationSize; i++)
         {
+            gens_best = min(gens_best, population[i].fitness() );
             if( answer.fitness() > population[i].fitness() )
             {
                 auto elapsedTime = duration_cast<seconds>(high_resolution_clock::now() - start).count();
 
-                cout << "Found new answer after " << elapsedTime << " seconds with value " << population[i].fitness() << endl;
             
                 answer = population[i];
 
+                answer.c.findBest(answer.x);
+
+                cout << "Found new answer after " << elapsedTime << " seconds with value " << population[i].fitness() << endl;
+
             }
         }
+        gen++;
+        if (gen % 1000 == 0) cout << "generation " << gen << ' ' << gens_best << endl;
     }
 
     return answer;

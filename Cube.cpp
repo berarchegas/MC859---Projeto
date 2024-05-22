@@ -4,28 +4,35 @@ using namespace std;
 
 mt19937 Cube::rng((int) chrono::steady_clock::now().time_since_epoch().count());
 
-Cube::Cube() : v(6, vector<vector<int>>(3, vector<int>(3, 0))) {
+Cube::Cube() : v(6) {
     for (int i = 0; i < 6; i++) {
         for (int j = 0; j < 3; j++) {
-            for (int k = 0; k < 3; k++) v[i][j][k] = i;
+            for (int k = 0; k < 3; k++) 
+                this->set(i, j, k, i);
         }
     }
 }
 
-Cube::Cube(const vector<vector<vector<int>>>& _v) : v(_v) {}
+Cube::Cube(const vector<int>& _v) : v(_v) {}
 
 Cube::Cube(const Cube& other) : v(other.v) {}
 
-vector<vector<vector<int>>> Cube::copyCube(const Cube& source) const {
-    Cube newCube = Cube();
-    for (int i = 0; i < 6; ++i) {
-        for (int j = 0; j < 3; ++j) {
-            for (int k = 0; k < 3; ++k) {
-                newCube.v[i][j][k] = source.v[i][j][k];
-            }
-        }
-    }
-    return newCube.v;
+void Cube::set(int face, int i, int j, int cor) {
+    int bit = 9 * i + 3 * j;
+    int val = this->v[face];
+    for (int add = 0; add < 3; add++)
+        if (!!(val & (1 << (bit + add))) != !!(cor & (1 << add))) 
+            val ^= (1 << (bit + add));
+    this->v[face] = val;
+}
+
+int Cube::getColor(int face, int i, int j) const {
+    int bit = 9 * i + 3 * j;
+    return (this->v[face] >> bit) & 7;
+}
+
+Cube Cube::copyCube() const {
+    return Cube(*this);
 }
 
 void Cube::print() const {
@@ -33,7 +40,7 @@ void Cube::print() const {
     for (int i = 0; i < 6; i++) {
         for (int j = 0; j < 3; j++) {
             for (int k = 0; k < 3; k++) {
-                cout << this->v[i][j][k];
+                cout << this->getColor(i, j, k);
             }
             cout << endl;
         }
@@ -56,389 +63,390 @@ A orientação da face amarela aponta pra face verde
 A orientação das outras têm a branca como base, ou seja, apontam para a amarela
 */
 
-
-void Cube::rightAntiClock() {
-    vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
-
-    temp[4][0][1] = cube[4][1][2];
-    temp[4][1][0] = cube[4][0][1];
-    temp[4][2][1] = cube[4][1][0];
-    temp[4][1][2] = cube[4][2][1];
-
-    temp[4][0][0] = cube[4][0][2];
-    temp[4][2][0] = cube[4][0][0];
-    temp[4][2][2] = cube[4][2][0];
-    temp[4][0][2] = cube[4][2][2];
-
-    temp[0][0][2] = cube[3][0][2];
-    temp[0][1][2] = cube[3][1][2];
-    temp[0][2][2] = cube[3][2][2];
-
-    temp[3][0][2] = cube[5][2][0];
-    temp[3][1][2] = cube[5][1][0];
-    temp[3][2][2] = cube[5][0][0];
-
-    temp[5][0][0] = cube[1][2][2];
-    temp[5][1][0] = cube[1][1][2];
-    temp[5][2][0] = cube[1][0][2];
-
-    temp[1][0][2] = cube[0][0][2];
-    temp[1][1][2] = cube[0][1][2];
-    temp[1][2][2] = cube[0][2][2];
-
-    this->v = temp;
-}
+// temp.set(4, 0, 1, this->getColor(4, 1, 2));
 
 void Cube::rightClock() {
-    vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
+    Cube temp = this->copyCube();
 
-    temp[4][0][1] = cube[4][1][0];
-    temp[4][1][0] = cube[4][2][1];
-    temp[4][2][1] = cube[4][1][2];
-    temp[4][1][2] = cube[4][0][1];
+    temp.set(4, 0, 1, this->getColor(4, 1, 0));
+    temp.set(4, 1, 0, this->getColor(4, 2, 1));
+    temp.set(4, 2, 1, this->getColor(4, 1, 2));
+    temp.set(4, 1, 2, this->getColor(4, 0, 1));
 
-    temp[4][0][0] = cube[4][2][0];
-    temp[4][2][0] = cube[4][2][2];
-    temp[4][2][2] = cube[4][0][2];
-    temp[4][0][2] = cube[4][0][0];
+    temp.set(4, 0, 0, this->getColor(4, 2, 0));
+    temp.set(4, 2, 0, this->getColor(4, 2, 2));
+    temp.set(4, 2, 2, this->getColor(4, 0, 2));
+    temp.set(4, 0, 2, this->getColor(4, 0, 0));
 
-    temp[0][0][2] = cube[1][0][2];
-    temp[0][1][2] = cube[1][1][2];
-    temp[0][2][2] = cube[1][2][2];
+    temp.set(0, 0, 2, this->getColor(1, 0, 2));
+    temp.set(0, 1, 2, this->getColor(1, 1, 2));
+    temp.set(0, 2, 2, this->getColor(1, 2, 2));
 
-    temp[3][0][2] = cube[0][0][2];
-    temp[3][1][2] = cube[0][1][2];
-    temp[3][2][2] = cube[0][2][2];
+    temp.set(3, 0, 2, this->getColor(0, 0, 2));
+    temp.set(3, 1, 2, this->getColor(0, 1, 2));
+    temp.set(3, 2, 2, this->getColor(0, 2, 2));
 
-    temp[5][2][0] = cube[3][0][2];
-    temp[5][1][0] = cube[3][1][2];
-    temp[5][0][0] = cube[3][2][2];
+    temp.set(5, 2, 0, this->getColor(3, 0, 2));
+    temp.set(5, 1, 0, this->getColor(3, 1, 2));
+    temp.set(5, 0, 0, this->getColor(3, 2, 2));
 
-    temp[1][0][2] = cube[5][2][0];
-    temp[1][1][2] = cube[5][1][0];
-    temp[1][2][2] = cube[5][0][0];
+    temp.set(1, 0, 2, this->getColor(5, 2, 0));
+    temp.set(1, 1, 2, this->getColor(5, 1, 0));
+    temp.set(1, 2, 2, this->getColor(5, 0, 0));
 
-    this->v = temp;
+    *this = temp;
+}
+
+void Cube::rightAntiClock() {
+    Cube temp = this->copyCube();
+
+    temp.set(4, 0, 1, this->getColor(4, 1, 2));
+    temp.set(4, 1, 0, this->getColor(4, 0, 1));
+    temp.set(4, 2, 1, this->getColor(4, 1, 0));
+    temp.set(4, 1, 2, this->getColor(4, 2, 1));
+
+    temp.set(4, 0, 0, this->getColor(4, 0, 2));
+    temp.set(4, 2, 0, this->getColor(4, 0, 0));
+    temp.set(4, 2, 2, this->getColor(4, 2, 0));
+    temp.set(4, 0, 2, this->getColor(4, 2, 2));
+
+    temp.set(0, 0, 2, this->getColor(3, 0, 2));
+    temp.set(0, 1, 2, this->getColor(3, 1, 2));
+    temp.set(0, 2, 2, this->getColor(3, 2, 2));
+
+    temp.set(3, 0, 2, this->getColor(5, 2, 0));
+    temp.set(3, 1, 2, this->getColor(5, 1, 0));
+    temp.set(3, 2, 2, this->getColor(5, 0, 0));
+
+    temp.set(5, 0, 0, this->getColor(1, 2, 2));
+    temp.set(5, 1, 0, this->getColor(1, 1, 2));
+    temp.set(5, 2, 0, this->getColor(1, 0, 2));
+
+    temp.set(1, 0, 2, this->getColor(0, 0, 2));
+    temp.set(1, 1, 2, this->getColor(0, 1, 2));
+    temp.set(1, 2, 2, this->getColor(0, 2, 2));
+
+    *this = temp;
 }
 
 void Cube::upClock() {
-    vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
+    Cube temp = this->copyCube();
 
-    temp[0][0][1] = cube[0][1][0];
-    temp[0][1][0] = cube[0][2][1];
-    temp[0][2][1] = cube[0][1][2];
-    temp[0][1][2] = cube[0][0][1];
+    temp.set(0, 0, 1, this->getColor(0, 1, 0));
+    temp.set(0, 1, 0, this->getColor(0, 2, 1));
+    temp.set(0, 2, 1, this->getColor(0, 1, 2));
+    temp.set(0, 1, 2, this->getColor(0, 0, 1));
 
-    temp[0][0][0] = cube[0][2][0];
-    temp[0][2][0] = cube[0][2][2];
-    temp[0][2][2] = cube[0][0][2];
-    temp[0][0][2] = cube[0][0][0];
+    temp.set(0, 0, 0, this->getColor(0, 2, 0));
+    temp.set(0, 2, 0, this->getColor(0, 2, 2));
+    temp.set(0, 2, 2, this->getColor(0, 0, 2));
+    temp.set(0, 0, 2, this->getColor(0, 0, 0));
 
-    temp[2][0][2] = cube[1][0][0];
-    temp[2][1][2] = cube[1][0][1];
-    temp[2][2][2] = cube[1][0][2];
+    temp.set(2, 0, 2, this->getColor(1, 0, 0));
+    temp.set(2, 1, 2, this->getColor(1, 0, 1));
+    temp.set(2, 2, 2, this->getColor(1, 0, 2));
 
-    temp[3][2][0] = cube[2][2][2];
-    temp[3][2][1] = cube[2][1][2];
-    temp[3][2][2] = cube[2][0][2];
+    temp.set(3, 2, 0, this->getColor(2, 2, 2));
+    temp.set(3, 2, 1, this->getColor(2, 1, 2));
+    temp.set(3, 2, 2, this->getColor(2, 0, 2));
 
-    temp[4][0][0] = cube[3][2][0];
-    temp[4][1][0] = cube[3][2][1];
-    temp[4][2][0] = cube[3][2][2];
+    temp.set(4, 0, 0, this->getColor(3, 2, 0));
+    temp.set(4, 1, 0, this->getColor(3, 2, 1));
+    temp.set(4, 2, 0, this->getColor(3, 2, 2));
 
-    temp[1][0][0] = cube[4][2][0];
-    temp[1][0][1] = cube[4][1][0];
-    temp[1][0][2] = cube[4][0][0];
+    temp.set(1, 0, 0, this->getColor(4, 2, 0));
+    temp.set(1, 0, 1, this->getColor(4, 1, 0));
+    temp.set(1, 0, 2, this->getColor(4, 0, 0));
 
-    this->v = temp;
+    *this = temp;
 }
 
 void Cube::upAntiClock() {
-    vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
+    Cube temp = this->copyCube();
 
-    temp[0][0][1] = cube[0][1][2];
-    temp[0][1][0] = cube[0][0][1];
-    temp[0][2][1] = cube[0][1][0];
-    temp[0][1][2] = cube[0][2][1];
+    temp.set(0, 0, 1, this->getColor(0, 1, 2));
+    temp.set(0, 1, 0, this->getColor(0, 0, 1));
+    temp.set(0, 2, 1, this->getColor(0, 1, 0));
+    temp.set(0, 1, 2, this->getColor(0, 2, 1));
 
-    temp[0][0][0] = cube[0][0][2];
-    temp[0][2][0] = cube[0][0][0];
-    temp[0][2][2] = cube[0][2][0];
-    temp[0][0][2] = cube[0][2][2];
+    temp.set(0, 0, 0, this->getColor(0, 0, 2));
+    temp.set(0, 2, 0, this->getColor(0, 0, 0));
+    temp.set(0, 2, 2, this->getColor(0, 2, 0));
+    temp.set(0, 0, 2, this->getColor(0, 2, 2));
 
-    temp[2][0][2] = cube[3][2][2];
-    temp[2][1][2] = cube[3][2][1];
-    temp[2][2][2] = cube[3][2][0];
+    temp.set(2, 0, 2, this->getColor(3, 2, 2));
+    temp.set(2, 1, 2, this->getColor(3, 2, 1));
+    temp.set(2, 2, 2, this->getColor(3, 2, 0));
 
-    temp[3][2][2] = cube[4][2][0];
-    temp[3][2][1] = cube[4][1][0];
-    temp[3][2][0] = cube[4][0][0];
+    temp.set(3, 2, 2, this->getColor(4, 2, 0));
+    temp.set(3, 2, 1, this->getColor(4, 1, 0));
+    temp.set(3, 2, 0, this->getColor(4, 0, 0));
 
-    temp[4][0][0] = cube[1][0][2];
-    temp[4][1][0] = cube[1][0][1];
-    temp[4][2][0] = cube[1][0][0];
+    temp.set(4, 0, 0, this->getColor(1, 0, 2));
+    temp.set(4, 1, 0, this->getColor(1, 0, 1));
+    temp.set(4, 2, 0, this->getColor(1, 0, 0));
 
-    temp[1][0][0] = cube[2][0][2];
-    temp[1][0][1] = cube[2][1][2];
-    temp[1][0][2] = cube[2][2][2];
+    temp.set(1, 0, 0, this->getColor(2, 0, 2));
+    temp.set(1, 0, 1, this->getColor(2, 1, 2));
+    temp.set(1, 0, 2, this->getColor(2, 2, 2));
 
-    this->v = temp;
+    *this = temp;
 }
 
 void Cube::leftClock() {
-    vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
+    Cube temp = this->copyCube();
 
-    temp[2][0][1] = cube[2][1][0];
-    temp[2][1][0] = cube[2][2][1];
-    temp[2][2][1] = cube[2][1][2];
-    temp[2][1][2] = cube[2][0][1];
+    temp.set(2, 0, 1, this->getColor(2, 1, 0));
+    temp.set(2, 1, 0, this->getColor(2, 2, 1));
+    temp.set(2, 2, 1, this->getColor(2, 1, 2));
+    temp.set(2, 1, 2, this->getColor(2, 0, 1));
 
-    temp[2][0][0] = cube[2][2][0];
-    temp[2][2][0] = cube[2][2][2];
-    temp[2][2][2] = cube[2][0][2];
-    temp[2][0][2] = cube[2][0][0];
+    temp.set(2, 0, 0, this->getColor(2, 2, 0));
+    temp.set(2, 2, 0, this->getColor(2, 2, 2));
+    temp.set(2, 2, 2, this->getColor(2, 0, 2));
+    temp.set(2, 0, 2, this->getColor(2, 0, 0));
 
-    temp[0][0][0] = cube[3][0][0];
-    temp[0][1][0] = cube[3][1][0];
-    temp[0][2][0] = cube[3][2][0];
+    temp.set(0, 0, 0, this->getColor(3, 0, 0));
+    temp.set(0, 1, 0, this->getColor(3, 1, 0));
+    temp.set(0, 2, 0, this->getColor(3, 2, 0));
 
-    temp[3][0][0] = cube[5][2][2];
-    temp[3][1][0] = cube[5][1][2];
-    temp[3][2][0] = cube[5][0][2];
+    temp.set(3, 0, 0, this->getColor(5, 2, 2));
+    temp.set(3, 1, 0, this->getColor(5, 1, 2));
+    temp.set(3, 2, 0, this->getColor(5, 0, 2));
 
-    temp[5][0][2] = cube[1][2][0];
-    temp[5][1][2] = cube[1][1][0];
-    temp[5][2][2] = cube[1][0][0];
+    temp.set(5, 0, 2, this->getColor(1, 2, 0));
+    temp.set(5, 1, 2, this->getColor(1, 1, 0));
+    temp.set(5, 2, 2, this->getColor(1, 0, 0));
 
-    temp[1][0][0] = cube[0][0][0];
-    temp[1][1][0] = cube[0][1][0];
-    temp[1][2][0] = cube[0][2][0];
+    temp.set(1, 0, 0, this->getColor(0, 0, 0));
+    temp.set(1, 1, 0, this->getColor(0, 1, 0));
+    temp.set(1, 2, 0, this->getColor(0, 2, 0));
 
-    this->v = temp;
+    *this = temp;
 }
 
 void Cube::leftAntiClock() {
-    vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
+    Cube temp = this->copyCube();
 
-    temp[2][0][1] = cube[2][1][2];
-    temp[2][1][0] = cube[2][0][1];
-    temp[2][2][1] = cube[2][1][0];
-    temp[2][1][2] = cube[2][2][1];
+    temp.set(2, 0, 1, this->getColor(2, 1, 2));
+    temp.set(2, 1, 0, this->getColor(2, 0, 1));
+    temp.set(2, 2, 1, this->getColor(2, 1, 0));
+    temp.set(2, 1, 2, this->getColor(2, 2, 1));
 
-    temp[2][0][0] = cube[2][0][2];
-    temp[2][2][0] = cube[2][0][0];
-    temp[2][2][2] = cube[2][2][0];
-    temp[2][0][2] = cube[2][2][2];
+    temp.set(2, 0, 0, this->getColor(2, 0, 2));
+    temp.set(2, 2, 0, this->getColor(2, 0, 0));
+    temp.set(2, 2, 2, this->getColor(2, 2, 0));
+    temp.set(2, 0, 2, this->getColor(2, 2, 2));
 
-    temp[0][0][0] = cube[1][0][0];
-    temp[0][1][0] = cube[1][1][0];
-    temp[0][2][0] = cube[1][2][0];
+    temp.set(0, 0, 0, this->getColor(1, 0, 0));
+    temp.set(0, 1, 0, this->getColor(1, 1, 0));
+    temp.set(0, 2, 0, this->getColor(1, 2, 0));
 
-    temp[3][0][0] = cube[0][0][0];
-    temp[3][1][0] = cube[0][1][0];
-    temp[3][2][0] = cube[0][2][0];
+    temp.set(3, 0, 0, this->getColor(0, 0, 0));
+    temp.set(3, 1, 0, this->getColor(0, 1, 0));
+    temp.set(3, 2, 0, this->getColor(0, 2, 0));
 
-    temp[5][0][2] = cube[3][2][0];
-    temp[5][1][2] = cube[3][1][0];
-    temp[5][2][2] = cube[3][0][0];
+    temp.set(5, 0, 2, this->getColor(3, 2, 0));
+    temp.set(5, 1, 2, this->getColor(3, 1, 0));
+    temp.set(5, 2, 2, this->getColor(3, 0, 0));
 
-    temp[1][0][0] = cube[5][2][2];
-    temp[1][1][0] = cube[5][1][2];
-    temp[1][2][0] = cube[5][0][2];
+    temp.set(1, 0, 0, this->getColor(5, 2, 2));
+    temp.set(1, 1, 0, this->getColor(5, 1, 2));
+    temp.set(1, 2, 0, this->getColor(5, 0, 2));
 
-    this->v = temp;
+    *this = temp;
 }
 
 void Cube::downClock() {
-    vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
+    Cube temp = this->copyCube();
 
-    temp[5][0][1] = cube[5][1][0];
-    temp[5][1][0] = cube[5][2][1];
-    temp[5][2][1] = cube[5][1][2];
-    temp[5][1][2] = cube[5][0][1];
+    temp.set(5, 0, 1, this->getColor(5, 1, 0));
+    temp.set(5, 1, 0, this->getColor(5, 2, 1));
+    temp.set(5, 2, 1, this->getColor(5, 1, 2));
+    temp.set(5, 1, 2, this->getColor(5, 0, 1));
 
-    temp[5][0][0] = cube[5][2][0];
-    temp[5][2][0] = cube[5][2][2];
-    temp[5][2][2] = cube[5][0][2];
-    temp[5][0][2] = cube[5][0][0];
+    temp.set(5, 0, 0, this->getColor(5, 2, 0));
+    temp.set(5, 2, 0, this->getColor(5, 2, 2));
+    temp.set(5, 2, 2, this->getColor(5, 0, 2));
+    temp.set(5, 0, 2, this->getColor(5, 0, 0));
 
-    temp[2][0][0] = cube[3][0][2];
-    temp[2][1][0] = cube[3][0][1];
-    temp[2][2][0] = cube[3][0][0];
+    temp.set(2, 0, 0, this->getColor(3, 0, 2));
+    temp.set(2, 1, 0, this->getColor(3, 0, 1));
+    temp.set(2, 2, 0, this->getColor(3, 0, 0));
 
-    temp[3][0][0] = cube[4][0][2];
-    temp[3][0][1] = cube[4][1][2];
-    temp[3][0][2] = cube[4][2][2];
+    temp.set(3, 0, 0, this->getColor(4, 0, 2));
+    temp.set(3, 0, 1, this->getColor(4, 1, 2));
+    temp.set(3, 0, 2, this->getColor(4, 2, 2));
 
-    temp[4][0][2] = cube[1][2][2];
-    temp[4][1][2] = cube[1][2][1];
-    temp[4][2][2] = cube[1][2][0];
+    temp.set(4, 0, 2, this->getColor(1, 2, 2));
+    temp.set(4, 1, 2, this->getColor(1, 2, 1));
+    temp.set(4, 2, 2, this->getColor(1, 2, 0));
 
-    temp[1][2][2] = cube[2][2][0];
-    temp[1][2][1] = cube[2][1][0];
-    temp[1][2][0] = cube[2][0][0];
+    temp.set(1, 2, 2, this->getColor(2, 2, 0));
+    temp.set(1, 2, 1, this->getColor(2, 1, 0));
+    temp.set(1, 2, 0, this->getColor(2, 0, 0));
 
-    this->v = temp;
+    *this = temp;
 }
 
 void Cube::downAntiClock() {
-    vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
+    Cube temp = this->copyCube();
 
-    temp[5][0][1] = cube[5][1][2];
-    temp[5][1][0] = cube[5][0][1];
-    temp[5][2][1] = cube[5][1][0];
-    temp[5][1][2] = cube[5][2][1];
+    temp.set(5, 0, 1, this->getColor(5, 1, 2));
+    temp.set(5, 1, 0, this->getColor(5, 0, 1));
+    temp.set(5, 2, 1, this->getColor(5, 1, 0));
+    temp.set(5, 1, 2, this->getColor(5, 2, 1));
 
-    temp[5][0][0] = cube[5][0][2];
-    temp[5][2][0] = cube[5][0][0];
-    temp[5][2][2] = cube[5][2][0];
-    temp[5][0][2] = cube[5][2][2];
+    temp.set(5, 0, 0, this->getColor(5, 0, 2));
+    temp.set(5, 2, 0, this->getColor(5, 0, 0));
+    temp.set(5, 2, 2, this->getColor(5, 2, 0));
+    temp.set(5, 0, 2, this->getColor(5, 2, 2));
 
-    temp[2][0][0] = cube[1][2][0];
-    temp[2][1][0] = cube[1][2][1];
-    temp[2][2][0] = cube[1][2][2];
+    temp.set(2, 0, 0, this->getColor(1, 2, 0));
+    temp.set(2, 1, 0, this->getColor(1, 2, 1));
+    temp.set(2, 2, 0, this->getColor(1, 2, 2));
 
-    temp[3][0][0] = cube[2][2][0];
-    temp[3][0][1] = cube[2][1][0];
-    temp[3][0][2] = cube[2][0][0];
+    temp.set(3, 0, 0, this->getColor(2, 2, 0));
+    temp.set(3, 0, 1, this->getColor(2, 1, 0));
+    temp.set(3, 0, 2, this->getColor(2, 0, 0));
 
-    temp[4][0][2] = cube[3][0][0];
-    temp[4][1][2] = cube[3][0][1];
-    temp[4][2][2] = cube[3][0][2];
+    temp.set(4, 0, 2, this->getColor(3, 0, 0));
+    temp.set(4, 1, 2, this->getColor(3, 0, 1));
+    temp.set(4, 2, 2, this->getColor(3, 0, 2));
 
-    temp[1][2][0] = cube[4][2][2];
-    temp[1][2][1] = cube[4][1][2];
-    temp[1][2][2] = cube[4][0][2];
+    temp.set(1, 2, 0, this->getColor(4, 2, 2));
+    temp.set(1, 2, 1, this->getColor(4, 1, 2));
+    temp.set(1, 2, 2, this->getColor(4, 0, 2));
 
-    this->v = temp;
+    *this = temp;
 }
 
 void Cube::frontClock() {
-    vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
+    Cube temp = this->copyCube();
 
-    temp[1][0][1] = cube[1][1][0];
-    temp[1][1][0] = cube[1][2][1];
-    temp[1][2][1] = cube[1][1][2];
-    temp[1][1][2] = cube[1][0][1];
+    temp.set(1, 0, 1, this->getColor(1, 1, 0));
+    temp.set(1, 1, 0, this->getColor(1, 2, 1));
+    temp.set(1, 2, 1, this->getColor(1, 1, 2));
+    temp.set(1, 1, 2, this->getColor(1, 0, 1));
 
-    temp[1][0][0] = cube[1][2][0];
-    temp[1][2][0] = cube[1][2][2];
-    temp[1][2][2] = cube[1][0][2];
-    temp[1][0][2] = cube[1][0][0];
+    temp.set(1, 0, 0, this->getColor(1, 2, 0));
+    temp.set(1, 2, 0, this->getColor(1, 2, 2));
+    temp.set(1, 2, 2, this->getColor(1, 0, 2));
+    temp.set(1, 0, 2, this->getColor(1, 0, 0));
 
-    temp[0][2][0] = cube[2][2][0];
-    temp[0][2][1] = cube[2][2][1];
-    temp[0][2][2] = cube[2][2][2];
+    temp.set(0, 2, 0, this->getColor(2, 2, 0));
+    temp.set(0, 2, 1, this->getColor(2, 2, 1));
+    temp.set(0, 2, 2, this->getColor(2, 2, 2));
 
-    temp[4][2][0] = cube[0][2][0];
-    temp[4][2][1] = cube[0][2][1];
-    temp[4][2][2] = cube[0][2][2];
+    temp.set(4, 2, 0, this->getColor(0, 2, 0));
+    temp.set(4, 2, 1, this->getColor(0, 2, 1));
+    temp.set(4, 2, 2, this->getColor(0, 2, 2));
 
-    temp[5][2][0] = cube[4][2][0];
-    temp[5][2][1] = cube[4][2][1];
-    temp[5][2][2] = cube[4][2][2];
+    temp.set(5, 2, 0, this->getColor(4, 2, 0));
+    temp.set(5, 2, 1, this->getColor(4, 2, 1));
+    temp.set(5, 2, 2, this->getColor(4, 2, 2));
 
-    temp[2][2][0] = cube[5][2][0];
-    temp[2][2][1] = cube[5][2][1];
-    temp[2][2][2] = cube[5][2][2];
+    temp.set(2, 2, 0, this->getColor(5, 2, 0));
+    temp.set(2, 2, 1, this->getColor(5, 2, 1));
+    temp.set(2, 2, 2, this->getColor(5, 2, 2));
 
-    this->v = temp;
+    *this = temp;
 }
 
 void Cube::frontAntiClock() {
-    vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
+    Cube temp = this->copyCube();
 
-    temp[1][0][1] = cube[1][1][2];
-    temp[1][1][0] = cube[1][0][1];
-    temp[1][2][1] = cube[1][1][0];
-    temp[1][1][2] = cube[1][2][1];
+    temp.set(1, 0, 1, this->getColor(1, 1, 2));
+    temp.set(1, 1, 0, this->getColor(1, 0, 1));
+    temp.set(1, 2, 1, this->getColor(1, 1, 0));
+    temp.set(1, 1, 2, this->getColor(1, 2, 1));
 
-    temp[1][0][0] = cube[1][0][2];
-    temp[1][2][0] = cube[1][0][0];
-    temp[1][2][2] = cube[1][2][0];
-    temp[1][0][2] = cube[1][2][2];
+    temp.set(1, 0, 0, this->getColor(1, 0, 2));
+    temp.set(1, 2, 0, this->getColor(1, 0, 0));
+    temp.set(1, 2, 2, this->getColor(1, 2, 0));
+    temp.set(1, 0, 2, this->getColor(1, 2, 2));
 
-    temp[5][2][0] = cube[2][2][0];
-    temp[5][2][1] = cube[2][2][1];
-    temp[5][2][2] = cube[2][2][2];
+    temp.set(5, 2, 0, this->getColor(2, 2, 0));
+    temp.set(5, 2, 1, this->getColor(2, 2, 1));
+    temp.set(5, 2, 2, this->getColor(2, 2, 2));
 
-    temp[2][2][0] = cube[0][2][0];
-    temp[2][2][1] = cube[0][2][1];
-    temp[2][2][2] = cube[0][2][2];
+    temp.set(2, 2, 0, this->getColor(0, 2, 0));
+    temp.set(2, 2, 1, this->getColor(0, 2, 1));
+    temp.set(2, 2, 2, this->getColor(0, 2, 2));
 
-    temp[0][2][0] = cube[4][2][0];
-    temp[0][2][1] = cube[4][2][1];
-    temp[0][2][2] = cube[4][2][2];
+    temp.set(0, 2, 0, this->getColor(4, 2, 0));
+    temp.set(0, 2, 1, this->getColor(4, 2, 1));
+    temp.set(0, 2, 2, this->getColor(4, 2, 2));
 
-    temp[4][2][0] = cube[5][2][0];
-    temp[4][2][1] = cube[5][2][1];
-    temp[4][2][2] = cube[5][2][2];
+    temp.set(4, 2, 0, this->getColor(5, 2, 0));
+    temp.set(4, 2, 1, this->getColor(5, 2, 1));
+    temp.set(4, 2, 2, this->getColor(5, 2, 2));
 
-    this->v = temp;
+    *this = temp;
 }
 
 void Cube::backClock() {
-    vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
+    Cube temp = this->copyCube();
 
-    temp[3][0][1] = cube[3][1][0];
-    temp[3][1][0] = cube[3][2][1];
-    temp[3][2][1] = cube[3][1][2];
-    temp[3][1][2] = cube[3][0][1];
+    temp.set(3, 0, 1, this->getColor(3, 1, 0));
+    temp.set(3, 1, 0, this->getColor(3, 2, 1));
+    temp.set(3, 2, 1, this->getColor(3, 1, 2));
+    temp.set(3, 1, 2, this->getColor(3, 0, 1));
 
-    temp[3][0][0] = cube[3][2][0];
-    temp[3][2][0] = cube[3][2][2];
-    temp[3][2][2] = cube[3][0][2];
-    temp[3][0][2] = cube[3][0][0];
+    temp.set(3, 0, 0, this->getColor(3, 2, 0));
+    temp.set(3, 2, 0, this->getColor(3, 2, 2));
+    temp.set(3, 2, 2, this->getColor(3, 0, 2));
+    temp.set(3, 0, 2, this->getColor(3, 0, 0));
 
-    temp[5][0][0] = cube[2][0][0];
-    temp[5][0][1] = cube[2][0][1];
-    temp[5][0][2] = cube[2][0][2];
+    temp.set(5, 0, 0, this->getColor(2, 0, 0));
+    temp.set(5, 0, 1, this->getColor(2, 0, 1));
+    temp.set(5, 0, 2, this->getColor(2, 0, 2));
 
-    temp[2][0][0] = cube[0][0][0];
-    temp[2][0][1] = cube[0][0][1];
-    temp[2][0][2] = cube[0][0][2];
+    temp.set(2, 0, 0, this->getColor(0, 0, 0));
+    temp.set(2, 0, 1, this->getColor(0, 0, 1));
+    temp.set(2, 0, 2, this->getColor(0, 0, 2));
 
-    temp[0][0][0] = cube[4][0][0];
-    temp[0][0][1] = cube[4][0][1];
-    temp[0][0][2] = cube[4][0][2];
+    temp.set(0, 0, 0, this->getColor(4, 0, 0));
+    temp.set(0, 0, 1, this->getColor(4, 0, 1));
+    temp.set(0, 0, 2, this->getColor(4, 0, 2));
 
-    temp[4][0][0] = cube[5][0][0];
-    temp[4][0][1] = cube[5][0][1];
-    temp[4][0][2] = cube[5][0][2];
+    temp.set(4, 0, 0, this->getColor(5, 0, 0));
+    temp.set(4, 0, 1, this->getColor(5, 0, 1));
+    temp.set(4, 0, 2, this->getColor(5, 0, 2));
 
-    this->v = temp;
+    *this = temp;
 }
 
 void Cube::backAntiClock() {
-    vector<vector<vector<int>>> temp = copyCube(*this), cube = copyCube(*this);
+    Cube temp = this->copyCube();
 
-    temp[3][0][1] = cube[3][1][2];
-    temp[3][1][0] = cube[3][0][1];
-    temp[3][2][1] = cube[3][1][0];
-    temp[3][1][2] = cube[3][2][1];
+    temp.set(3, 0, 1, this->getColor(3, 1, 2));
+    temp.set(3, 1, 0, this->getColor(3, 0, 1));
+    temp.set(3, 2, 1, this->getColor(3, 1, 0));
+    temp.set(3, 1, 2, this->getColor(3, 2, 1));
 
-    temp[3][0][0] = cube[3][0][2];
-    temp[3][2][0] = cube[3][0][0];
-    temp[3][2][2] = cube[3][2][0];
-    temp[3][0][2] = cube[3][2][2];
+    temp.set(3, 0, 0, this->getColor(3, 0, 2));
+    temp.set(3, 2, 0, this->getColor(3, 0, 0));
+    temp.set(3, 2, 2, this->getColor(3, 2, 0));
+    temp.set(3, 0, 2, this->getColor(3, 2, 2));
 
-    temp[0][0][0] = cube[2][0][0];
-    temp[0][0][1] = cube[2][0][1];
-    temp[0][0][2] = cube[2][0][2];
+    temp.set(0, 0, 0, this->getColor(2, 0, 0));
+    temp.set(0, 0, 1, this->getColor(2, 0, 1));
+    temp.set(0, 0, 2, this->getColor(2, 0, 2));
 
-    temp[4][0][0] = cube[0][0][0];
-    temp[4][0][1] = cube[0][0][1];
-    temp[4][0][2] = cube[0][0][2];
+    temp.set(4, 0, 0, this->getColor(0, 0, 0));
+    temp.set(4, 0, 1, this->getColor(0, 0, 1));
+    temp.set(4, 0, 2, this->getColor(0, 0, 2));
 
-    temp[5][0][0] = cube[4][0][0];
-    temp[5][0][1] = cube[4][0][1];
-    temp[5][0][2] = cube[4][0][2];
+    temp.set(5, 0, 0, this->getColor(4, 0, 0));
+    temp.set(5, 0, 1, this->getColor(4, 0, 1));
+    temp.set(5, 0, 2, this->getColor(4, 0, 2));
 
-    temp[2][0][0] = cube[5][0][0];
-    temp[2][0][1] = cube[5][0][1];
-    temp[2][0][2] = cube[5][0][2];
+    temp.set(2, 0, 0, this->getColor(5, 0, 0));
+    temp.set(2, 0, 1, this->getColor(5, 0, 1));
+    temp.set(2, 0, 2, this->getColor(5, 0, 2));
 
-    this->v = temp;
+    *this = temp;
 }
 
 void Cube::verticalClock() {
@@ -537,7 +545,7 @@ int Cube::countDif() const {
     for (int i = 0; i < 6; i++) {
         for (int j = 0; j < 3; j++) {
             for (int k = 0; k < 3; k++) {
-                ans += this->v[i][j][k] != i;
+                ans += this->getColor(i, j, k) != i;
             }
         }
     }
@@ -546,16 +554,11 @@ int Cube::countDif() const {
 }
 
 int Cube::fitness(const vector<int> &x) {
-    int ans = this->countDif();
+    Cube temp = this->copyCube();
+    int ans = temp.countDif();
     for (int i = 0; i < (int)x.size(); i++) {
-        this->performOperation(x[i]);
-        ans = min(ans, this->countDif());
-    }
-    for (int i = (int)x.size() - 1; i >= 0; i--) {
-        if (x[i] % 2 == 0)
-            this->performOperation(x[i] + 1);
-        else 
-            this->performOperation(x[i] - 1);
+        temp.performOperation(x[i]);
+        ans = min(ans, temp.countDif());
     }
     return ans;
 }
@@ -563,5 +566,17 @@ int Cube::fitness(const vector<int> &x) {
 void Cube::scramble() {
     for (int i = 0; i < 100; i++) {
         this->performOperation(rng() % 18);
+    }
+}
+
+void Cube::findBest(const vector<int> &x) {
+    Cube temp = this->copyCube();
+    int ans = this->fitness(x);
+    for (int i = 0; i < (int)x.size(); i++) {
+        temp.performOperation(x[i]);
+        if (temp.countDif() == ans) {
+            temp.print();
+            break;
+        }
     }
 }
