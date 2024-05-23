@@ -72,7 +72,7 @@ void Cube::initializeStatics() {
     };
 
     factorial = {
-        1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800, 39916800, 479001600
+        1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800, 39916800
     };
 
     initializeEightMap();
@@ -111,12 +111,17 @@ void Cube::initializeSixMap() {
     } while (next_permutation(permutation.begin(), permutation.end()));
 }
 
+// BFS to calculate the distance to the solved state for every configuration of corner pieces
 void Cube::initializeCornerDistance() {
-    cornerDistance.resize(88179840);
+    // N = 8! * 3 ^ 7
+    const int N = 88179840;
+    cornerDistance.resize(N);
+    cout << N << endl;
     Cube c;
     queue<Cube> fila;
     fila.push(c);
     cornerDistance[c.cornerMapping()] = 1;
+    int cnt = 0;
     while (!fila.empty()) {
         c = fila.front();
         fila.pop();
@@ -131,18 +136,26 @@ void Cube::initializeCornerDistance() {
             if (i&1) c.performOperation(i - 1);
             else c.performOperation(i + 1);
         }
+        cnt++;
+        if (cnt % 100000 == 0) cout << cnt << endl;
     }
+    for (int i = 0; i < N; i++) cout << cornerDistance[i] - 1 << '\n';
 }
 
+// BFS to calculate the distance to the solved state for every configuration of the first and second set of edge pieces
 void Cube::initializeEdgeDistance() {
-    edgeDistance1.resize(42577920);
-    edgeDistance2.resize(42577920);
+    // N = nck(12, 6) * 6! * 2 ^ 6
+    const int N = 42577920;
+    edgeDistance1.resize(N);
+    edgeDistance2.resize(N);
+    cout << N << endl;
     Cube c;
     queue<Cube> fila;
     fila.push(c);
     pair<int, int> em = c.edgeMapping();
     edgeDistance1[em.first] = 1;
     edgeDistance2[em.second] = 1;
+    int cnt = 0;
     while (!fila.empty()) {
         c = fila.front();
         fila.pop();
@@ -161,7 +174,11 @@ void Cube::initializeEdgeDistance() {
             if (i&1) c.performOperation(i - 1);
             else c.performOperation(i + 1);
         }
+        cnt++;
+        if (cnt % 100000 == 0) cout << cnt << endl;
     }
+    for (int i = 0; i < N; i++) cout << edgeDistance1[i] - 1 << '\n';
+    for (int i = 0; i < N; i++) cout << edgeDistance2[i] - 1 << '\n';
 }
 
 Cube::Cube() : v(6) {
@@ -222,8 +239,6 @@ A face frontal é a branca, cuja orientação aponta pra face azul
 A orientação da face amarela aponta pra face verde
 A orientação das outras têm a branca como base, ou seja, apontam para a amarela
 */
-
-// temp.set(4, 0, 1, this->getColor(4, 1, 2));
 
 void Cube::rightClock() {
     Cube temp = this->copyCube();
@@ -700,6 +715,7 @@ void Cube::performOperation(int operationIndex) {
     }
 }
 
+// How many stickers are in the wrong place
 int Cube::countDif() const {
     int ans = 0;
     for (int i = 0; i < 6; i++) {
@@ -713,6 +729,7 @@ int Cube::countDif() const {
 
 }
 
+// Fitness based on Wrong Stickers
 int Cube::fitnessWrongStickers(const vector<int> &x) {
     Cube temp = this->copyCube();
     int ans = temp.countDif();
@@ -723,12 +740,14 @@ int Cube::fitnessWrongStickers(const vector<int> &x) {
     return ans;
 }
 
+// LowerBound = max distance out of the three sets that we precalculated
 char lowerBound(Cube &temp) {
     pair<int, int> em = temp.edgeMapping();
     int cm = temp.cornerMapping();
     return max({Cube::cornerDistance[cm], Cube::edgeDistance1[em.first], Cube::edgeDistance2[em.second]});
 }
 
+// Fitness based on Korf's pattern databases
 int Cube::fitnessLowerBound(const vector<int> &x) {
     Cube temp = this->copyCube();
     char ans = cornerDistance[temp.cornerMapping()];
@@ -749,18 +768,22 @@ void Cube::scramble() {
     }
 }
 
+// Prints the cube at the point that minimizes the fitness function
 void Cube::findBest(const vector<int> &x) {
     Cube temp = this->copyCube();
     int ans = this->fitness(x);
     for (int i = 0; i < (int)x.size(); i++) {
         temp.performOperation(x[i]);
-        if (temp.countDif() == ans) {
+
+        // Change here if you are using the stickers fitness
+        if (lowerBound(temp) == ans) {
             temp.print();
             break;
         }
     }
 }
 
+// Maps the corners to an int in the range [0, 8! * 3 ^ 7 - 1]
 int Cube::cornerMapping() const {
     vector<int> permutation(8), orientation(8);
     for (int i = 0; i < 8; i++) {
@@ -787,6 +810,7 @@ int Cube::cornerMapping() const {
     return valPwr * 40320 + eightMap[valFat];
 }
 
+// Maps a vector with 6 elements between 0 and 11 to an integer in the range [0, nck(12, 6) - 1]
 int calculateNck(vector<int> &pos) {
     int id = 0, ans = 0;
     for (int i = 0; i < 12; i++) {
@@ -797,6 +821,7 @@ int calculateNck(vector<int> &pos) {
     return ans;
 }
 
+// Maps the first and second set of edges to an int in the range [0, nck(12, 6) * 6! * 2 ^ 6 - 1]
 pair<int, int> Cube::edgeMapping() const{
     vector<int> permutation(12), orientation(12), positions1(6), positions2(6), perm1(6), perm2(6), orient1(6), orient2(6);
     for (int i = 0; i < 12; i++) {
