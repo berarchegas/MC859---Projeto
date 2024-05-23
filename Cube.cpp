@@ -114,32 +114,32 @@ void Cube::initializeSixMap() {
 // BFS to calculate the distance to the solved state for every configuration of corner pieces
 void Cube::initializeCornerDistance() {
     // N = 8! * 3 ^ 7
-    const int N = 88179840;
-    cornerDistance.resize(N);
-    cout << N << endl;
-    Cube c;
-    queue<Cube> fila;
-    fila.push(c);
-    cornerDistance[c.cornerMapping()] = 1;
-    int cnt = 0;
-    while (!fila.empty()) {
-        c = fila.front();
-        fila.pop();
-        int d = cornerDistance[c.cornerMapping()];
-        for (int i = 0; i < 12; i++) {
-            c.performOperation(i);
-            int cm = c.cornerMapping();
-            if (!cornerDistance[cm]) {
-                cornerDistance[cm] = d + 1;
-                fila.push(c); 
-            }
-            if (i&1) c.performOperation(i - 1);
-            else c.performOperation(i + 1);
-        }
-        cnt++;
-        if (cnt % 100000 == 0) cout << cnt << endl;
-    }
-    for (int i = 0; i < N; i++) cout << cornerDistance[i] - 1 << '\n';
+    // const int N = 88179840;
+    // cornerDistance.resize(N);
+    // cout << N << endl;
+    // Cube c;
+    // queue<Cube> fila;
+    // fila.push(c);
+    // cornerDistance[c.cornerMapping()] = 1;
+    // int cnt = 0;
+    // while (!fila.empty()) {
+    //     c = fila.front();
+    //     fila.pop();
+    //     int d = cornerDistance[c.cornerMapping()];
+    //     for (int i = 0; i < 18; i++) {
+    //         c.performOperation(i);
+    //         int cm = c.cornerMapping();
+    //         if (!cornerDistance[cm]) {
+    //             cornerDistance[cm] = d + 1;
+    //             fila.push(c); 
+    //         }
+    //         if (i&1) c.performOperation(i - 1);
+    //         else c.performOperation(i + 1);
+    //     }
+    //     cnt++;
+    //     if (cnt % 100000 == 0) cout << cnt << endl;
+    // }
+    // for (int i = 0; i < N; i++) cout << cornerDistance[i] - 1 << '\n';
 }
 
 // BFS to calculate the distance to the solved state for every configuration of the first and second set of edge pieces
@@ -755,7 +755,7 @@ int Cube::fitnessLowerBound(const vector<int> &x) {
         temp.performOperation(x[i]);
         ans = min(ans, lowerBound(temp));
     }
-    return ans - 1;
+    return ans;
 }
 
 int Cube::fitness(const vector<int> &x) {
@@ -814,9 +814,13 @@ int Cube::cornerMapping() const {
 int calculateNck(vector<int> &pos) {
     int id = 0, ans = 0;
     for (int i = 0; i < 12; i++) {
-        if (id == 6) break;
-        if (pos[id] == i) id++;
-        else ans += Cube::factorial[11 - i] / (Cube::factorial[5 - id] * Cube::factorial[6 - i + id]);
+        if (pos[id] == i) {
+            id++;
+            if (id == 6) break;
+        }
+        else {
+            ans += Cube::factorial[11 - i] / (Cube::factorial[5 - id] * Cube::factorial[6 - i + id]);
+        }
     }
     return ans;
 }
@@ -845,8 +849,8 @@ pair<int, int> Cube::edgeMapping() const{
             id1++;
         }
         else {
-            positions1[id2] = i;
-            perm1[id2] = permutation[i] - 6;
+            positions2[id2] = i;
+            perm2[id2] = permutation[i] - 6;
             orient2[id2] = orientation[i];
             id2++;
         }
@@ -861,5 +865,5 @@ pair<int, int> Cube::edgeMapping() const{
         pwr *= 2;
     }
     int valNck1 = calculateNck(positions1), valNck2 = calculateNck(positions2);
-    return {valNck1 * 64 * 720 + valFat1 * 64 + valPwr1, valNck2 * 64 * 720 + valFat2 * 64 + valPwr2};
+    return {valNck1 * 64 * 720 + sixMap[valFat1] * 64 + valPwr1, valNck2 * 64 * 720 + sixMap[valFat2]* 64 + valPwr2};
 }

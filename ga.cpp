@@ -175,10 +175,10 @@ Solution genetic_algorithm()
 
 int main()
 {
-    Solution::c.scramble();
-    Solution::N = 50;
+    // Solution::c.scramble();
+    // Solution::N = 50;
 
-    Solution answer = genetic_algorithm();
-    cout << answer.fitness() << endl;
+    // Solution answer = genetic_algorithm();
+    // cout << answer.fitness() << endl;
     return 0;
 }
