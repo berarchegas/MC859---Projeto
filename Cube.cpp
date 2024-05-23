@@ -3,6 +3,166 @@
 using namespace std;
 
 mt19937 Cube::rng((int) chrono::steady_clock::now().time_since_epoch().count());
+vector<vector<array<int, 3>>> Cube::cornerPositions;
+map<array<int, 3>, int> Cube::cornerToInt;
+vector<int> Cube::eightMap;
+vector<int> Cube::sixMap;
+vector<char> Cube::cornerDistance;
+vector<char> Cube::edgeDistance1;
+vector<char> Cube::edgeDistance2;
+vector<vector<array<int, 3>>> Cube::edgePositions;
+map<array<int, 2>, int> Cube::edgeToInt;
+bool Cube::initialized = false;
+vector<int> Cube::factorial;
+
+void Cube::initializeStatics() {
+    if (initialized) return;
+    initialized = true;
+
+    cornerPositions = {
+        {{1, 0, 0}, {0, 2, 0}, {2, 2, 2}},
+        {{1, 0, 2}, {0, 2, 2}, {4, 2, 0}},
+        {{1, 2, 0}, {2, 2, 0}, {5, 2, 2}},
+        {{1, 2, 2}, {4, 2, 2}, {5, 2, 0}},
+        {{3, 0, 0}, {2, 0, 0}, {5, 0, 2}},
+        {{3, 0, 2}, {4, 0, 2}, {5, 0, 0}},
+        {{3, 2, 0}, {0, 0, 0}, {2, 0, 2}},
+        {{3, 2, 2}, {0, 0, 2}, {4, 0, 0}},
+    };
+
+    cornerToInt = {
+        {{0, 1, 2}, 0},
+        {{0, 1, 4}, 1},
+        {{0, 2, 3}, 2},
+        {{0, 3, 4}, 3},
+        {{1, 2, 5}, 4},
+        {{1, 4, 5}, 5},
+        {{2, 3, 5}, 6},
+        {{3, 4, 5}, 7},
+    };
+
+    edgePositions = {
+        {{0, 1, 0}, {2, 1, 2}},
+        {{0, 1, 2}, {4, 1, 0}},
+        {{5, 1, 0}, {4, 1, 2}},
+        {{5, 1, 2}, {2, 1, 0}},
+        {{1, 0, 1}, {0, 2, 1}},
+        {{3, 0, 1}, {5, 0, 1}},
+        {{1, 1, 0}, {2, 2, 1}},
+        {{1, 1, 2}, {4, 2, 1}},
+        {{1, 2, 1}, {5, 2, 1}},
+        {{3, 1, 0}, {2, 0, 1}},
+        {{3, 1, 2}, {4, 0, 1}},
+        {{3, 2, 1}, {0, 0, 1}},
+    };
+
+    edgeToInt = {
+        {{0, 1}, 0},
+        {{0, 2}, 1},
+        {{0, 4}, 2},
+        {{2, 5}, 3},
+        {{3, 5}, 4},
+        {{4, 5}, 5},
+        {{0, 3}, 6},
+        {{1, 2}, 7},
+        {{1, 4}, 8},
+        {{1, 5}, 9},
+        {{2, 3}, 10},
+        {{3, 4}, 11},
+    };
+
+    factorial = {
+        1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800, 39916800, 479001600
+    };
+
+    initializeEightMap();
+    initializeSixMap();
+    initializeCornerDistance();
+    initializeEdgeDistance();
+}
+
+void Cube::initializeEightMap() {
+    eightMap.resize(16777216);
+    vector<int> permutation(8);
+    iota(permutation.begin(), permutation.end(), 0);
+    int id = 0;
+    do {
+        int calc = 0, pwr = 1;
+        for (int x : permutation) {
+            calc += pwr * x;
+            pwr *= 8;
+        }
+        eightMap[calc] = id++;
+    } while (next_permutation(permutation.begin(), permutation.end()));
+}
+
+void Cube::initializeSixMap() {
+    sixMap.resize(46656);
+    vector<int> permutation(6);
+    iota(permutation.begin(), permutation.end(), 0);
+    int id = 0;
+    do {
+        int calc = 0, pwr = 1;
+        for (int x : permutation) {
+            calc += pwr * x;
+            pwr *= 6;
+        }
+        sixMap[calc] = id++;
+    } while (next_permutation(permutation.begin(), permutation.end()));
+}
+
+void Cube::initializeCornerDistance() {
+    cornerDistance.resize(88179840);
+    Cube c;
+    queue<Cube> fila;
+    fila.push(c);
+    cornerDistance[c.cornerMapping()] = 1;
+    while (!fila.empty()) {
+        c = fila.front();
+        fila.pop();
+        int d = cornerDistance[c.cornerMapping()];
+        for (int i = 0; i < 12; i++) {
+            c.performOperation(i);
+            int cm = c.cornerMapping();
+            if (!cornerDistance[cm]) {
+                cornerDistance[cm] = d + 1;
+                fila.push(c); 
+            }
+            if (i&1) c.performOperation(i - 1);
+            else c.performOperation(i + 1);
+        }
+    }
+}
+
+void Cube::initializeEdgeDistance() {
+    edgeDistance1.resize(42577920);
+    edgeDistance2.resize(42577920);
+    Cube c;
+    queue<Cube> fila;
+    fila.push(c);
+    pair<int, int> em = c.edgeMapping();
+    edgeDistance1[em.first] = 1;
+    edgeDistance2[em.second] = 1;
+    while (!fila.empty()) {
+        c = fila.front();
+        fila.pop();
+        em = c.edgeMapping();
+        int d1 = edgeDistance1[em.first], d2 = edgeDistance2[em.second];
+        for (int i = 0; i < 18; i++) {
+            c.performOperation(i);
+            em = c.edgeMapping();
+            if (!edgeDistance1[em.first] || !edgeDistance2[em.second]) {
+                if (!edgeDistance1[em.first])
+                    edgeDistance1[em.first] = d1 + 1;
+                if (!edgeDistance2[em.second])
+                    edgeDistance2[em.second] = d2 + 1;
+                fila.push(c); 
+            }
+            if (i&1) c.performOperation(i - 1);
+            else c.performOperation(i + 1);
+        }
+    }
+}
 
 Cube::Cube() : v(6) {
     for (int i = 0; i < 6; i++) {
@@ -553,7 +713,7 @@ int Cube::countDif() const {
 
 }
 
-int Cube::fitness(const vector<int> &x) {
+int Cube::fitnessWrongStickers(const vector<int> &x) {
     Cube temp = this->copyCube();
     int ans = temp.countDif();
     for (int i = 0; i < (int)x.size(); i++) {
@@ -561,6 +721,26 @@ int Cube::fitness(const vector<int> &x) {
         ans = min(ans, temp.countDif());
     }
     return ans;
+}
+
+char lowerBound(Cube &temp) {
+    pair<int, int> em = temp.edgeMapping();
+    int cm = temp.cornerMapping();
+    return max({Cube::cornerDistance[cm], Cube::edgeDistance1[em.first], Cube::edgeDistance2[em.second]});
+}
+
+int Cube::fitnessLowerBound(const vector<int> &x) {
+    Cube temp = this->copyCube();
+    char ans = cornerDistance[temp.cornerMapping()];
+    for (int i = 0; i < (int)x.size(); i++) {
+        temp.performOperation(x[i]);
+        ans = min(ans, lowerBound(temp));
+    }
+    return ans - 1;
+}
+
+int Cube::fitness(const vector<int> &x) {
+    return this->fitnessLowerBound(x);
 }
 
 void Cube::scramble() {
@@ -579,4 +759,82 @@ void Cube::findBest(const vector<int> &x) {
             break;
         }
     }
+}
+
+int Cube::cornerMapping() const {
+    vector<int> permutation(8), orientation(8);
+    for (int i = 0; i < 8; i++) {
+        array<int, 3> colors, sortedColors;
+        for (int j = 0; j < 3; j++) {
+            colors[j] = this->getColor(cornerPositions[i][j][0], cornerPositions[i][j][1], cornerPositions[i][j][2]);
+        }
+        sortedColors = colors;
+        sort(sortedColors.begin(), sortedColors.end());
+        permutation[i] = cornerToInt[sortedColors];
+        for (int j = 0; j < 3; j++) {
+            if (colors[j] == sortedColors[0]) orientation[i] = j;
+        }
+    }
+    int fat = 1, valFat = 0, pwr = 1, valPwr = 0;
+    for (int i = 0; i < 8; i++) {
+        valFat += fat * permutation[i];
+        fat *= 8;
+        if (i < 7) {
+            valPwr += pwr * orientation[i];
+            pwr *= 3;
+        }
+    }
+    return valPwr * 40320 + eightMap[valFat];
+}
+
+int calculateNck(vector<int> &pos) {
+    int id = 0, ans = 0;
+    for (int i = 0; i < 12; i++) {
+        if (id == 6) break;
+        if (pos[id] == i) id++;
+        else ans += Cube::factorial[11 - i] / (Cube::factorial[5 - id] * Cube::factorial[6 - i + id]);
+    }
+    return ans;
+}
+
+pair<int, int> Cube::edgeMapping() const{
+    vector<int> permutation(12), orientation(12), positions1(6), positions2(6), perm1(6), perm2(6), orient1(6), orient2(6);
+    for (int i = 0; i < 12; i++) {
+        array<int, 2> colors, sortedColors;
+        for (int j = 0; j < 2; j++) {
+            colors[j] = this->getColor(edgePositions[i][j][0], edgePositions[i][j][1], edgePositions[i][j][2]);
+        }
+        sortedColors = colors;
+        sort(sortedColors.begin(), sortedColors.end());
+        permutation[i] = edgeToInt[sortedColors];
+        for (int j = 0; j < 2; j++) {
+            if (colors[j] == sortedColors[0]) orientation[i] = j;
+        }
+    }
+    int id1 = 0, id2 = 0;
+    for (int i = 0; i < 12; i++) {
+        if (permutation[i] < 6) {
+            positions1[id1] = i;
+            perm1[id1] = permutation[i];
+            orient1[id1] = orientation[i];
+            id1++;
+        }
+        else {
+            positions1[id2] = i;
+            perm1[id2] = permutation[i] - 6;
+            orient2[id2] = orientation[i];
+            id2++;
+        }
+    }
+    int fat = 1, valFat1 = 0, valFat2 = 0, pwr = 1, valPwr1 = 0, valPwr2 = 0;
+    for (int i = 0; i < 6; i++) {
+        valFat1 += fat * perm1[i];
+        valFat2 += fat * perm2[i];
+        fat *= 6;
+        valPwr1 += pwr * orient1[i];
+        valPwr2 += pwr * orient2[i];
+        pwr *= 2;
+    }
+    int valNck1 = calculateNck(positions1), valNck2 = calculateNck(positions2);
+    return {valNck1 * 64 * 720 + valFat1 * 64 + valPwr1, valNck2 * 64 * 720 + valFat2 * 64 + valPwr2};
 }
